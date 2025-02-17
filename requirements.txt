@@ -38,6 +38,7 @@ tensorflow-estimator==2.15.0
 tensorflow-io-gcs-filesystem==0.37.0
 termcolor==1.1.0
 torch==1.13.1
+numpy==1.26.4
 tqdm==4.64.0
 typing_extensions==4.2.0
 urllib3==1.26.9
