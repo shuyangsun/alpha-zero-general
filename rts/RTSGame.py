@@ -5,7 +5,7 @@ import numpy as np
 
 from rts.src.config_class import CONFIG
 
-sys.path.append('..')
+sys.path.append("..")
 from rts.src.Board import Board
 from rts.src.config import NUM_ENCODERS, NUM_ACTS, P_NAME_IDX, A_TYPE_IDX, TIME_IDX, FPS
 
@@ -39,9 +39,18 @@ class RTSGame:
         :return: Returns new board from initial_board_config. That config can be dynamically changed as game progresses.
         """
         b = Board(self.n)
-        remaining_time = None  # when setting initial board, remaining time might be different
+        remaining_time = (
+            None  # when setting initial board, remaining time might be different
+        )
         for e in self.initial_board_config:
-            b.pieces[e.x, e.y] = [e.player, e.a_type, e.health, e.carry, e.gold, e.timeout]
+            b.pieces[e.x, e.y] = [
+                e.player,
+                e.a_type,
+                e.health,
+                e.carry,
+                e.gold,
+                e.timeout,
+            ]
             remaining_time = e.timeout
         # remaining time is stored in all squares
         b.pieces[:, :, TIME_IDX] = remaining_time
@@ -54,7 +63,9 @@ class RTSGame:
     def getActionSize(self) -> int:
         return self.n * self.n * NUM_ACTS + 1
 
-    def getNextState(self, board: np.ndarray, player: int, action: int) -> Tuple[np.ndarray, int]:
+    def getNextState(
+        self, board: np.ndarray, player: int, action: int
+    ) -> Tuple[np.ndarray, int]:
         """
         Gets next state for board. It also updates tick for board as game tick iterations are transfered within board as 6. parameter
         :param board: current board
@@ -99,7 +110,9 @@ class RTSGame:
 
         for y in range(self.n):
             for x in range(self.n):
-                if b[x][y][P_NAME_IDX] == player and b[x][y][A_TYPE_IDX] != 1:  # for this player and not Gold
+                if (
+                    b[x][y][P_NAME_IDX] == player and b[x][y][A_TYPE_IDX] != 1
+                ):  # for this player and not Gold
                     valids.extend(b.get_moves_for_square(x, y, config=config))
                 else:
                     valids.extend([0] * NUM_ACTS)
@@ -177,7 +190,7 @@ class RTSGame:
 
     def getSymmetries(self, board: np.ndarray, pi):
         # mirror, rotational
-        assert (len(pi) == self.n * self.n * NUM_ACTS + 1)  # 1 for pass
+        assert len(pi) == self.n * self.n * NUM_ACTS + 1  # 1 for pass
         pi_board = np.reshape(pi[:-1], (self.n, self.n, NUM_ACTS))
         return_list = []
         for i in range(1, 5):
@@ -234,15 +247,15 @@ def display(board):
         update_graphics(board, game_display, clock, FPS)
     else:
         for y in range(n):
-            print('-' * (n * 8 + 1))
+            print("-" * (n * 8 + 1))
             for x in range(n):
                 a_player = board[x][y][P_NAME_IDX]
                 if a_player == 1:
-                    a_player = '+1'
+                    a_player = "+1"
                 if a_player == -1:
-                    a_player = '-1'
+                    a_player = "-1"
                 if a_player == 0:
-                    a_player = ' 0'
+                    a_player = " 0"
                 print("|" + a_player + " " + str(board[x][y][A_TYPE_IDX]) + " ", end="")
             print("|")
-        print('-' * (n * 8 + 1))
+        print("-" * (n * 8 + 1))
