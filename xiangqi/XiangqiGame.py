@@ -7,13 +7,25 @@ import numpy as np
 
 from ctypes import *
 
-from XiangqiLogic import BOARD_SIZE, get_init_board
+from XiangqiLogic import (
+    NUM_COLS,
+    NUM_ROWS,
+    BOARD_SIZE,
+    MAX_POSSIBLE_MOVES,
+    get_init_board,
+    move,
+    valid_moves,
+    get_winner,
+    flip_board,
+    mirror_horizontal,
+    encode_board_state,
+)
 
 
 class XiangqiGame(Game):
 
-    def __init__(self, n):
-        self.n = n
+    def __init__(self):
+        pass
 
     def getInitBoard(self):
         # return initial board (numpy board)
@@ -24,92 +36,47 @@ class XiangqiGame(Game):
 
     def getActionSize(self):
         # return number of actions
-        return 112
+        return MAX_POSSIBLE_MOVES + 1
 
     def getNextState(self, board, player, action):
-        # if player takes action on board, return next (board,player)
-        # action must be a valid move
-        if action == self.n * self.n:
+        if action == 0xFFFF:
+            # Invalid move
             return (board, -player)
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        move = (int(action / self.n), action % self.n)
-        b.execute_move(move, player)
-        return (b.pieces, -player)
+        return (move(board, action), -player)
 
     def getValidMoves(self, board, player):
-        # return a fixed size binary vector
-        valids = [0] * self.getActionSize()
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        legalMoves = b.get_legal_moves(player)
-        if len(legalMoves) == 0:
-            valids[-1] = 1
-            return np.array(valids)
-        for x, y in legalMoves:
-            valids[self.n * x + y] = 1
-        return np.array(valids)
+        res = np.zeros(self.getActionSize())
+        n, _ = valid_moves(board, player)
+        if n == 0:
+            res[-1] = 1
+            return res
+        res[:n] = 1
+        return res
 
     def getGameEnded(self, board, player):
-        # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
-        # player = 1
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        if b.has_legal_moves(player):
+        winner = get_winner(board)
+        if winner == -2:
             return 0
-        if b.has_legal_moves(-player):
-            return 0
-        if b.countDiff(player) > 0:
-            return 1
-        return -1
+        return winner
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
-        return player * board
+        if player == 1:
+            return board
+        return flip_board(board)
 
     def getSymmetries(self, board, pi):
-        # mirror, rotational
-        assert len(pi) == self.n**2 + 1  # 1 for pass
-        pi_board = np.reshape(pi[:-1], (self.n, self.n))
-        l = []
-
-        for i in range(1, 5):
-            for j in [True, False]:
-                newB = np.rot90(board, i)
-                newPi = np.rot90(pi_board, i)
-                if j:
-                    newB = np.fliplr(newB)
-                    newPi = np.fliplr(newPi)
-                l += [(newB, list(newPi.ravel()) + [pi[-1]])]
-        return l
+        assert len(pi) == MAX_POSSIBLE_MOVES + 1  # 1 for pass
+        mirror_lr = mirror_horizontal(board)
+        pi_lr = pi.copy()
+        for row in range(NUM_ROWS):
+            row_start = row * NUM_COLS
+            for col in range(NUM_COLS // 2):
+                left = pi_lr[row_start + col]
+                pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
+                pi_lr[row_start + NUM_COLS - 1 - col] = left
+        # TODO: add flip and mirror vertical.
+        return [(mirror_lr, pi_lr)]
 
     def stringRepresentation(self, board):
-        return board.tostring()
-
-    def stringRepresentationReadable(self, board):
-        board_s = "".join(
-            self.square_content[square] for row in board for square in row
-        )
-        return board_s
-
-    def getScore(self, board, player):
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        return b.countDiff(player)
-
-    @staticmethod
-    def display(board):
-        n = board.shape[0]
-        print("   ", end="")
-        for y in range(n):
-            print(y, end=" ")
-        print("")
-        print("-----------------------")
-        for y in range(n):
-            print(y, "|", end="")  # print the row #
-            for x in range(n):
-                piece = board[y][x]  # get the piece to print
-                print(XiangqiGame.square_content[piece], end=" ")
-            print("|")
-
-        print("-----------------------")
+        return encode_board_state(board)

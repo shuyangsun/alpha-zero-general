@@ -1,10 +1,14 @@
 import os
 import sys
+import base64
 
 import numpy as np
 
 from ctypes import *
+from typing import Tuple
 
+NUM_COLS = 9
+NUM_ROWS = 10
 BOARD_SIZE = 90
 MAX_POSSIBLE_MOVES = 112
 
@@ -16,6 +20,19 @@ if not os.path.exists(_LIBC_PATH) and os.path.isfile(_LIBC_PATH):
 
 _libc = CDLL(_LIBC_PATH)
 _libc.ResetBoard_C.argtypes = [c_uint8 * BOARD_SIZE]
+_libc.Move_C.argtypes = [POINTER(c_int8), c_uint16]
+_libc.PossibleMoves_C.argtypes = [
+    POINTER(c_int8),
+    c_bool,
+    c_bool,
+    c_uint16 * MAX_POSSIBLE_MOVES,
+]
+_libc.GetWinner_C.argtypes = [POINTER(c_int8)]
+_libc.FlipBoard_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
+_libc.MirrorBoardHorizontal_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
+_libc.MirrorBoardVertical_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
+_libc.EncodeBoardState_C.argtypes = [POINTER(c_int8), c_uint64 * 4]
+
 _init_board = (c_uint8 * BOARD_SIZE)()
 _libc.ResetBoard_C(_init_board)
 _np_init_board = np.ctypeslib.as_array(_init_board)
@@ -25,16 +42,74 @@ def get_init_board() -> np.ndarray:
     return _np_init_board.copy()
 
 
-class XiangqiBoard:
-    board = (c_uint8 * BOARD_SIZE)()
-    possible_moves = (c_uint16 * MAX_POSSIBLE_MOVES)()
-    possible_boards = (c_uint8 * MAX_POSSIBLE_MOVES * BOARD_SIZE)()
-
-    def __init__(self):
-        _libc.ResetBoard_C(self.board)
-
-    def get_board(self) -> np.ndarray:
-        return np.ctypeslib.as_array(self.board)
+def move(board: np.ndarray, action: c_uint16) -> np.ndarray:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    _libc.Move_C(board_c, action)
+    return np.ctypeslib.as_array(board_c, shape=(1, BOARD_SIZE))
 
 
-print(XiangqiBoard().get_board())
+def valid_moves(board: np.ndarray, player: int) -> Tuple[c_uint8, np.ndarray]:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    buff = (c_uint16 * MAX_POSSIBLE_MOVES)()
+    player_c = True
+    if player < 0:
+        player_c = False
+    num_moves = _libc.PossibleMoves_C(board_c, player_c, False, buff)
+    return (num_moves, np.ctypeslib.as_array(buff, shape=(num_moves,)))
+
+
+def get_winner(board: np.ndarray) -> c_int8:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    return _libc.GetWinner_C(board_c)
+
+
+def flip_board(board: np.ndarray) -> np.ndarray:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = (c_int8 * BOARD_SIZE)()
+    _libc.FlipBoard_C(res, board_c)
+    return np.ctypeslib.as_array(res, shape=(1, BOARD_SIZE))
+
+
+def mirror_horizontal(board: np.ndarray) -> np.ndarray:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = (c_int8 * BOARD_SIZE)()
+    _libc.MirrorBoardHorizontal_C(res, board_c)
+    return np.ctypeslib.as_array(res, shape=(1, BOARD_SIZE))
+
+
+def mirror_vertical(board: np.ndarray) -> np.ndarray:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = (c_int8 * BOARD_SIZE)()
+    _libc.MirrorBoardVertical_C(res, board_c)
+    return np.ctypeslib.as_array(res, shape=(1, BOARD_SIZE))
+
+
+def encode_board_state(board: np.ndarray) -> str:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = (c_uint64 * 4)()
+    _libc.EncodeBoardState_C(board_c, res)
+    return base64.b64encode(bytes(res)).decode("utf-8")
+
+
+board = get_init_board()
+next = move(board, 9)
+n, moves = valid_moves(next, 1)
+print(n)
+print(moves)
+print(next)
+print(get_winner(next))
+print(len(encode_board_state(next)))
