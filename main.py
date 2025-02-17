@@ -20,7 +20,7 @@ args = dotdict(
         "maxlenOfQueue": 200000,  # Number of game examples to train the neural networks.
         "numMCTSSims": 25,  # Number of games moves for MCTS to simulate.
         "arenaCompare": 40,  # Number of games to play during arena play to determine if new net will be accepted.
-        "cpuct": 32,
+        "cpuct": 1,
         "checkpoint": "./temp/",
         "load_model": False,
         "load_folder_file": ("/dev/models/8x100x50", "best.pth.tar"),
