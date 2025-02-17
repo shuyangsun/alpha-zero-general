@@ -10,6 +10,7 @@ from typing import Tuple
 NUM_COLS = 9
 NUM_ROWS = 10
 BOARD_SIZE = 90
+BOARD_STR_SIZE = 232
 MAX_POSSIBLE_MOVES = 112
 
 _LIBC_PATH = "xiangqi/lib/xiangqi_libc.so"
@@ -32,6 +33,7 @@ _libc.FlipBoard_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
 _libc.MirrorBoardHorizontal_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
 _libc.MirrorBoardVertical_C.argtypes = [c_int8 * BOARD_SIZE, POINTER(c_int8)]
 _libc.EncodeBoardState_C.argtypes = [POINTER(c_int8), c_uint64 * 4]
+_libc.BoardToString_C.argtypes = [POINTER(c_int8), c_char * BOARD_STR_SIZE]
 
 _init_board = (c_uint8 * BOARD_SIZE)()
 _libc.ResetBoard_C(_init_board)
@@ -103,3 +105,12 @@ def encode_board_state(board: np.ndarray) -> str:
     res = (c_uint64 * 4)()
     _libc.EncodeBoardState_C(board_c, res)
     return base64.b64encode(bytes(res)).decode("utf-8")
+
+
+def board_str(board: np.ndarray) -> str:
+    if board.dtype != np.int8:
+        board = board.astype(np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = (c_char * BOARD_STR_SIZE)()
+    _libc.BoardToString_C(board_c, res)
+    return res.value.decode("utf-8")

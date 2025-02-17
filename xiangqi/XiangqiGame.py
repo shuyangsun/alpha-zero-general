@@ -20,6 +20,7 @@ from .XiangqiLogic import (
     flip_board,
     mirror_horizontal,
     encode_board_state,
+    board_str,
 )
 
 
@@ -81,3 +82,7 @@ class XiangqiGame(Game):
 
     def stringRepresentation(self, board):
         return encode_board_state(board)
+
+    @staticmethod
+    def display(board: np.ndarray):
+        print(board_str(board))
