@@ -2,12 +2,13 @@ from __future__ import print_function
 import sys
 
 sys.path.append("..")
+
 from Game import Game
 import numpy as np
 
 from ctypes import *
 
-from XiangqiLogic import (
+from .XiangqiLogic import (
     NUM_COLS,
     NUM_ROWS,
     BOARD_SIZE,

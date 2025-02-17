@@ -12,7 +12,7 @@ NUM_ROWS = 10
 BOARD_SIZE = 90
 MAX_POSSIBLE_MOVES = 112
 
-_LIBC_PATH = "lib/xiangqi_libc.so"
+_LIBC_PATH = "xiangqi/lib/xiangqi_libc.so"
 
 if not os.path.exists(_LIBC_PATH) and os.path.isfile(_LIBC_PATH):
     print("Cannot find lib/xiangqi_libc.so.", file=sys.stderr)
@@ -103,13 +103,3 @@ def encode_board_state(board: np.ndarray) -> str:
     res = (c_uint64 * 4)()
     _libc.EncodeBoardState_C(board_c, res)
     return base64.b64encode(bytes(res)).decode("utf-8")
-
-
-board = get_init_board()
-next = move(board, 9)
-n, moves = valid_moves(next, 1)
-print(n)
-print(moves)
-print(next)
-print(get_winner(next))
-print(len(encode_board_state(next)))
