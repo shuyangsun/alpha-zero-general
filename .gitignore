@@ -15,3 +15,5 @@ checkpoints/
 # Virtual environment
 .venv/
 
+# Binary files
+*.so
