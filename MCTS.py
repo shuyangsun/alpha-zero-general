@@ -57,6 +57,107 @@ class MCTS:
 
     def search(self, canonicalBoard):
         """
+        This function performs one iteration of MCTS. It is called till a leaf
+        node is found. The action chosen at each node is one that has the
+        maximum upper confidence bound as in the paper.
+
+        Once a leaf node is found, the neural network is called to return an
+        initial policy P and a value v for the state. This value is propagated
+        up the search path. In case the leaf node is a terminal state, the
+        outcome is propagated up the search path. The values of Ns, Nsa, Qsa are
+        updated.
+
+        NOTE: the return values are the negative of the value of the current
+        state. This is done since v is in [-1,1] and if v is the value of a
+        state for the current player, then its value is -v for the other player.
+
+        Returns:
+            v: the negative of the value of the current canonicalBoard
+        """
+        EPS = 1e-8  # small constant to avoid division by zero
+        stack = []
+        current_board = canonicalBoard
+
+        # Descend until we hit a terminal or leaf node.
+        while True:
+            s = self.game.stringRepresentation(current_board)
+
+            # Cache game end status.
+            if s not in self.Es:
+                self.Es[s] = self.game.getGameEnded(current_board, 1)
+            # Terminal node.
+            if self.Es[s] != 0:
+                # v is the negative of the outcome (to flip the perspective)
+                v = -self.Es[s]
+                break
+
+            # Leaf node.
+            if s not in self.Ps:
+                self.Ps[s], v = self.nnet.predict(current_board)
+                valids = self.game.getValidMoves(current_board, 1)
+                # Mask invalid moves.
+                self.Ps[s] = self.Ps[s] * valids
+                sum_Ps_s = np.sum(self.Ps[s])
+                if sum_Ps_s > 0:
+                    self.Ps[s] /= sum_Ps_s  # renormalize
+                else:
+                    # If all valid moves were masked, do a workaround.
+                    log.error("All valid moves were masked, doing a workaround.")
+                    self.Ps[s] = self.Ps[s] + valids
+                    self.Ps[s] /= np.sum(self.Ps[s])
+                self.Vs[s] = valids
+                self.Ns[s] = 0
+
+                # Return the negative value, as in the recursive version.
+                v = -v
+                break
+
+            # If not terminal or leaf, choose the action with the highest UCT.
+            valids = self.Vs[s]
+            cur_best = -float("inf")
+            best_act = -1
+            for a in range(self.game.getActionSize()):
+                if valids[a]:
+                    if (s, a) in self.Qsa:
+                        u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][
+                            a
+                        ] * math.sqrt(self.Ns[s]) / (1 + self.Nsa[(s, a)])
+                    else:
+                        u = (
+                            self.args.cpuct
+                            * self.Ps[s][a]
+                            * math.sqrt(self.Ns[s] + EPS)
+                        )
+                    if u > cur_best:
+                        cur_best = u
+                        best_act = a
+
+            # Save the state and chosen action to propagate back later.
+            stack.append((s, best_act))
+
+            # Get the next state and update the current board.
+            next_s, next_player = self.game.getNextState(current_board, 1, best_act)
+            current_board = self.game.getCanonicalForm(next_s, next_player)
+
+        # Backpropagation: propagate the evaluation up the search path.
+        while stack:
+            s, a = stack.pop()
+            if (s, a) in self.Qsa:
+                self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (
+                    self.Nsa[(s, a)] + 1
+                )
+                self.Nsa[(s, a)] += 1
+            else:
+                self.Qsa[(s, a)] = v
+                self.Nsa[(s, a)] = 1
+            self.Ns[s] += 1
+            # Flip the sign for the other player's perspective.
+            v = -v
+
+        return v
+
+    def search_original(self, canonicalBoard):
+        """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
         has the maximum upper confidence bound as in the paper.
@@ -128,7 +229,7 @@ class MCTS:
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = self.search(next_s)
+        v = self.search_original(next_s)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (
