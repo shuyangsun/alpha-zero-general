@@ -8,6 +8,10 @@
 # checkpoint
 checkpoints/
 
-# For PyCharm users
+# IDE
+.vscode/
 .idea/
+
+# Virtual environment
+.venv/
 
