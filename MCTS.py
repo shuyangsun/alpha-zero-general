@@ -119,8 +119,7 @@ class MCTS:
             cur_best = -float("inf")
             best_act = -1
             for a in range(self.game.getActionSize()):
-                # TODO: valids[a] != 0xFFFF only needed for Xiangqi.
-                if valids[a] and valids[a] != 0xFFFF:
+                if valids[a]:
                     if (s, a) in self.Qsa:
                         u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][
                             a
@@ -214,8 +213,7 @@ class MCTS:
 
         # pick the action with the highest upper confidence bound
         for a in range(self.game.getActionSize()):
-            # TODO: valids[a] != 0xFFFF only needed for Xiangqi.
-            if valids[a] and valids[a] != 0xFFFF:
+            if valids[a]:
                 if (s, a) in self.Qsa:
                     u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(
                         self.Ns[s]

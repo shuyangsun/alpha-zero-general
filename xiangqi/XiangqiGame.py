@@ -36,20 +36,24 @@ class XiangqiGame(Game):
 
     def getActionSize(self):
         # return number of actions
-        return MAX_POSSIBLE_MOVES
+        return BOARD_SIZE * BOARD_SIZE
 
     def getNextState(self, board, player, action):
-        n, moves = valid_moves(board, player)
-        assert action < n
-        return (move(board, moves[action]), -player)
+        from_pos = action // 90
+        to_pos = action % 90
+        return (move(board, c_uint16((from_pos << 8) | to_pos)), -player)
 
     def getValidMoves(self, board, player):
+        res = np.zeros(self.getActionSize(), dtype=np.int8)
         n, moves = valid_moves(board, player)
         if n == 0:
-            res = np.zeros(self.getActionSize(), dtype=np.uint16)
-            res.fill(0xFFFF)
             return res
-        return moves
+        for i in range(n):
+            move = moves[i]
+            from_pos = (move & 0xFF00) >> 8
+            to_pos = move & 0xFF
+            res[from_pos * 90 + to_pos] = 1
+        return res
 
     def getGameEnded(self, board, player):
         winner = get_winner(board)
