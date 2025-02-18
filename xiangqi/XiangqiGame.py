@@ -10,7 +10,8 @@ from ctypes import *
 
 from .XiangqiLogic import (
     BOARD_SIZE,
-    MAX_POSSIBLE_MOVES,
+    NUM_ROWS,
+    NUM_COLS,
     get_init_board,
     move,
     valid_moves,
@@ -18,7 +19,7 @@ from .XiangqiLogic import (
     flip_board,
     encode_board_state,
     board_str,
-    movement_str,
+    mirror_horizontal,
 )
 
 
@@ -68,16 +69,16 @@ class XiangqiGame(Game):
         return flip_board(board)
 
     def getSymmetries(self, board, pi):
-        # assert len(pi) == MAX_POSSIBLE_MOVES
+        # assert len(pi) == self.getActionSize()
         # mirror_lr = mirror_horizontal(board)
         # pi_lr = pi.copy()
-        # for row in range(NUM_ROWS):
-        #     row_start = row * NUM_COLS
-        #     for col in range(NUM_COLS // 2):
-        #         left = pi_lr[row_start + col]
-        #         pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
-        #         pi_lr[row_start + NUM_COLS - 1 - col] = left
-        # # TODO: add flip and mirror vertical.
+        # for i in range(BOARD_SIZE):
+        #     for row in range(NUM_ROWS):
+        #         row_start = i * BOARD_SIZE + row * NUM_COLS
+        #         for col in range(NUM_COLS // 2):
+        #             left = pi_lr[row_start + col]
+        #             pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
+        #             pi_lr[row_start + NUM_COLS - 1 - col] = left
         # return [(mirror_lr, pi_lr)]
         return []
 

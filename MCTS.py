@@ -76,8 +76,10 @@ class MCTS:
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
+        MAX_ITER = 10000
         EPS = 1e-8  # small constant to avoid division by zero
         stack = []
+        iter_cnt = 0
         current_board = canonicalBoard
 
         # Descend until we hit a terminal or leaf node.
@@ -94,7 +96,7 @@ class MCTS:
                 break
 
             # Leaf node.
-            if s not in self.Ps:
+            if iter_cnt >= MAX_ITER or s not in self.Ps:
                 self.Ps[s], v = self.nnet.predict(current_board)
                 valids = self.game.getValidMoves(current_board, 1)
                 # Mask invalid moves.
@@ -140,6 +142,8 @@ class MCTS:
             # Get the next state and update the current board.
             next_s, next_player = self.game.getNextState(current_board, 1, best_act)
             current_board = self.game.getCanonicalForm(next_s, next_player)
+
+            iter_cnt += 1
 
         # Backpropagation: propagate the evaluation up the search path.
         while stack:
