@@ -1,14 +1,11 @@
 import os
 import sys
 import base64
-import faulthandler
 
 import numpy as np
 
 from ctypes import *
 from typing import Tuple
-
-faulthandler.enable()
 
 NUM_COLS = 9
 NUM_ROWS = 10

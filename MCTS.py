@@ -84,6 +84,8 @@ class MCTS:
 
         # Descend until we hit a terminal or leaf node.
         while True:
+            iter_cnt += 1
+
             s = self.game.stringRepresentation(current_board)
 
             # Cache game end status.
@@ -142,8 +144,6 @@ class MCTS:
             # Get the next state and update the current board.
             next_s, next_player = self.game.getNextState(current_board, 1, best_act)
             current_board = self.game.getCanonicalForm(next_s, next_player)
-
-            iter_cnt += 1
 
         # Backpropagation: propagate the evaluation up the search path.
         while stack:
