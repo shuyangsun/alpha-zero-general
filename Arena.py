@@ -41,7 +41,7 @@ class Arena:
         curPlayer = 1
         board = self.game.getInitBoard()
         it = 0
-        MAX_ITER = 10000
+        MAX_ITER = 5000
 
         for player in players[0], players[2]:
             if hasattr(player, "startGame"):

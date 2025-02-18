@@ -76,7 +76,7 @@ class MCTS:
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
-        MAX_ITER = 10000
+        MAX_ITER = 5000
         EPS = 1e-8  # small constant to avoid division by zero
         stack = []
         iter_cnt = 0
