@@ -17,6 +17,8 @@ class MCTS:
         self.game = game
         self.nnet = nnet
         self.args = args
+        self.visited = set()
+
         self.Qsa = {}  # stores Q values for s,a (as defined in the paper)
         self.Nsa = {}  # stores #times edge s,a was visited
         self.Ns = {}  # stores #times board s was visited
@@ -55,7 +57,7 @@ class MCTS:
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search(self, canonicalBoard):
+    def search_loop(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is called till a leaf
         node is found. The action chosen at each node is one that has the
@@ -156,7 +158,7 @@ class MCTS:
 
         return v
 
-    def search_original(self, canonicalBoard):
+    def search(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -229,7 +231,7 @@ class MCTS:
         next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = self.search_original(next_s)
+        v = self.search(next_s)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (

@@ -38,7 +38,7 @@ class XiangqiGame(Game):
 
     def getActionSize(self):
         # return number of actions
-        return MAX_POSSIBLE_MOVES + 1
+        return MAX_POSSIBLE_MOVES
 
     def getNextState(self, board, player, action):
         if action == 0xFFFF:
@@ -47,12 +47,12 @@ class XiangqiGame(Game):
         return (move(board, action), -player)
 
     def getValidMoves(self, board, player):
-        res = np.zeros(self.getActionSize())
-        n, _ = valid_moves(board, player)
+        res = np.zeros(self.getActionSize(), dtype=np.uint16)
+        res.fill(0xFFFF)
+        n, moves = valid_moves(board, player)
         if n == 0:
-            res[-1] = 1
             return res
-        res[:n] = 1
+        res[:n] = moves[:n]
         return res
 
     def getGameEnded(self, board, player):
@@ -68,17 +68,18 @@ class XiangqiGame(Game):
         return flip_board(board)
 
     def getSymmetries(self, board, pi):
-        assert len(pi) == MAX_POSSIBLE_MOVES + 1  # 1 for pass
-        mirror_lr = mirror_horizontal(board)
-        pi_lr = pi.copy()
-        for row in range(NUM_ROWS):
-            row_start = row * NUM_COLS
-            for col in range(NUM_COLS // 2):
-                left = pi_lr[row_start + col]
-                pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
-                pi_lr[row_start + NUM_COLS - 1 - col] = left
-        # TODO: add flip and mirror vertical.
-        return [(mirror_lr, pi_lr)]
+        # assert len(pi) == MAX_POSSIBLE_MOVES
+        # mirror_lr = mirror_horizontal(board)
+        # pi_lr = pi.copy()
+        # for row in range(NUM_ROWS):
+        #     row_start = row * NUM_COLS
+        #     for col in range(NUM_COLS // 2):
+        #         left = pi_lr[row_start + col]
+        #         pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
+        #         pi_lr[row_start + NUM_COLS - 1 - col] = left
+        # # TODO: add flip and mirror vertical.
+        # return [(mirror_lr, pi_lr)]
+        return []
 
     def stringRepresentation(self, board):
         return encode_board_state(board)
