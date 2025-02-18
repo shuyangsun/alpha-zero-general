@@ -118,7 +118,7 @@ def encode_board_state(board: np.ndarray) -> str:
 def board_str(board: np.ndarray) -> str:
     if board.dtype != np.int8 or not board.flags.c_contiguous:
         board = np.ascontiguousarray(board, dtype=np.int8)
-    board_c = board.ctypes.data_as(POINTER(c_int8 * BOARD_SIZE))
+    board_c = board.ctypes.data_as(POINTER(c_int8))
     res = create_string_buffer(BOARD_STR_SIZE)
     _libc.BoardToString_C(board_c, res)
     return res.value.decode("utf-8")
