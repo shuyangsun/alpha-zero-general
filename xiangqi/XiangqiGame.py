@@ -80,7 +80,7 @@ class XiangqiGame(Game):
         #             pi_lr[row_start + col] = pi_lr[row_start + NUM_COLS - 1 - col]
         #             pi_lr[row_start + NUM_COLS - 1 - col] = left
         # return [(mirror_lr, pi_lr)]
-        return []
+        return [(board, pi)]
 
     def stringRepresentation(self, board):
         return encode_board_state(board)
