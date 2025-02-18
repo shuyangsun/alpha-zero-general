@@ -37,6 +37,7 @@ class XiangqiNNet(nn.Module):
     def forward(self, s):
         # s: batch_size x board_size
         s = s.view(-1, 1, self.board_size)  # batch_size x 1 x board_size
+
         s = F.relu(self.bn1(self.conv1(s)))  # batch_size x num_channels x board_size
         s = F.relu(self.bn2(self.conv2(s)))  # batch_size x num_channels x board_size
         s = F.relu(
