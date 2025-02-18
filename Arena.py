@@ -41,12 +41,13 @@ class Arena:
         curPlayer = 1
         board = self.game.getInitBoard()
         it = 0
+        MAX_ITER = 10000
 
         for player in players[0], players[2]:
             if hasattr(player, "startGame"):
                 player.startGame()
 
-        while self.game.getGameEnded(board, curPlayer) == 0:
+        while self.game.getGameEnded(board, curPlayer) == 0 and it <= MAX_ITER:
             it += 1
             if verbose:
                 assert self.display
@@ -71,6 +72,9 @@ class Arena:
                 opponent.notify(board, action)
 
             board, curPlayer = self.game.getNextState(board, curPlayer, action)
+
+        if it > MAX_ITER:
+            return 0
 
         for player in players[0], players[2]:
             if hasattr(player, "endGame"):
