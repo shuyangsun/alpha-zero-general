@@ -9,8 +9,6 @@ import numpy as np
 from ctypes import *
 
 from .XiangqiLogic import (
-    NUM_COLS,
-    NUM_ROWS,
     BOARD_SIZE,
     MAX_POSSIBLE_MOVES,
     get_init_board,
@@ -18,9 +16,9 @@ from .XiangqiLogic import (
     valid_moves,
     get_winner,
     flip_board,
-    mirror_horizontal,
     encode_board_state,
     board_str,
+    movement_str,
 )
 
 
@@ -41,19 +39,17 @@ class XiangqiGame(Game):
         return MAX_POSSIBLE_MOVES
 
     def getNextState(self, board, player, action):
-        if action == 0xFFFF:
-            # Invalid move
-            return (board, -player)
-        return (move(board, action), -player)
+        n, moves = valid_moves(board, player)
+        assert action < n
+        return (move(board, moves[action]), -player)
 
     def getValidMoves(self, board, player):
-        res = np.zeros(self.getActionSize(), dtype=np.uint16)
-        res.fill(0xFFFF)
         n, moves = valid_moves(board, player)
         if n == 0:
+            res = np.zeros(self.getActionSize(), dtype=np.uint16)
+            res.fill(0xFFFF)
             return res
-        res[:n] = moves[:n]
-        return res
+        return moves
 
     def getGameEnded(self, board, player):
         winner = get_winner(board)

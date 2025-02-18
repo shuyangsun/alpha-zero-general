@@ -57,7 +57,7 @@ class MCTS:
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search_loop(self, canonicalBoard):
+    def search(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is called till a leaf
         node is found. The action chosen at each node is one that has the
@@ -119,7 +119,8 @@ class MCTS:
             cur_best = -float("inf")
             best_act = -1
             for a in range(self.game.getActionSize()):
-                if valids[a]:
+                # TODO: valids[a] != 0xFFFF only needed for Xiangqi.
+                if valids[a] and valids[a] != 0xFFFF:
                     if (s, a) in self.Qsa:
                         u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][
                             a
@@ -158,7 +159,7 @@ class MCTS:
 
         return v
 
-    def search(self, canonicalBoard):
+    def search_original(self, canonicalBoard):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -213,7 +214,8 @@ class MCTS:
 
         # pick the action with the highest upper confidence bound
         for a in range(self.game.getActionSize()):
-            if valids[a]:
+            # TODO: valids[a] != 0xFFFF only needed for Xiangqi.
+            if valids[a] and valids[a] != 0xFFFF:
                 if (s, a) in self.Qsa:
                     u = self.Qsa[(s, a)] + self.args.cpuct * self.Ps[s][a] * math.sqrt(
                         self.Ns[s]

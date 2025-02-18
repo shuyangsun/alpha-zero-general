@@ -40,6 +40,21 @@ _libc.ResetBoard_C(_init_board)
 _np_init_board = np.ctypeslib.as_array(_init_board, shape=(BOARD_SIZE,)).copy()
 
 
+def movement_str(movement: c_uint16) -> str:
+    from_pos = (movement & 0xFF00) >> 8
+    to_pos = movement & 0x00FF
+    return f"{chr(ord('A') + from_pos % 9)}{from_pos // 9},{chr(ord('A') + to_pos % 9)}{to_pos // 9}"
+
+
+def board_str(board: np.ndarray) -> str:
+    if board.dtype != np.int8 or not board.flags.c_contiguous:
+        board = np.ascontiguousarray(board, dtype=np.int8)
+    board_c = board.ctypes.data_as(POINTER(c_int8))
+    res = create_string_buffer(BOARD_STR_SIZE)
+    _libc.BoardToString_C(board_c, res)
+    return res.value.decode("utf-8")
+
+
 def get_init_board() -> np.ndarray:
     return _np_init_board.copy()
 
@@ -113,12 +128,3 @@ def encode_board_state(board: np.ndarray) -> str:
     board_c = board.ctypes.data_as(POINTER(c_int8))
     _libc.EncodeBoardState_C(board_c, res)
     return base64.b64encode(bytes(res_buff)).decode("utf-8")
-
-
-def board_str(board: np.ndarray) -> str:
-    if board.dtype != np.int8 or not board.flags.c_contiguous:
-        board = np.ascontiguousarray(board, dtype=np.int8)
-    board_c = board.ctypes.data_as(POINTER(c_int8))
-    res = create_string_buffer(BOARD_STR_SIZE)
-    _libc.BoardToString_C(board_c, res)
-    return res.value.decode("utf-8")

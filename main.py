@@ -4,11 +4,10 @@ import coloredlogs
 
 from Coach import Coach
 
-from xiangqi.XiangqiGame import XiangqiGame as Game
-from xiangqi.pytorch.NNet import NNetWrapper as nn
-
 # from othello.OthelloGame import OthelloGame as Game
 # from othello.pytorch.NNet import NNetWrapper as nn
+from xiangqi.XiangqiGame import XiangqiGame as Game
+from xiangqi.pytorch.NNet import NNetWrapper as nn
 from utils import *
 
 log = logging.getLogger(__name__)
