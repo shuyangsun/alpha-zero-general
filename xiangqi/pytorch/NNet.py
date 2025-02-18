@@ -18,8 +18,8 @@ args = dotdict(
     {
         "lr": 0.001,
         "dropout": 0.3,
-        "epochs": 10,
-        "batch_size": 256,
+        "epochs": 20,
+        "batch_size": 16,
         "cuda": torch.cuda.is_available(),
         "num_channels": 64,
     }
@@ -39,6 +39,9 @@ class NNetWrapper(NeuralNet):
         """
         examples: list of examples, each example is of form (board, pi, v)
         """
+        if len(examples) <= 0:
+            print("No training example.", file=sys.stderr)
+            sys.exit(2)
         optimizer = optim.Adam(self.nnet.parameters())
 
         for epoch in range(args.epochs):
@@ -47,7 +50,8 @@ class NNetWrapper(NeuralNet):
             pi_losses = AverageMeter()
             v_losses = AverageMeter()
 
-            batch_count = int(len(examples) / args.batch_size)
+            batch_size = min(len(examples), args.batch_size)
+            batch_count = int(len(examples) / batch_size)
 
             t = tqdm(range(batch_count), desc="Training Net")
             for _ in t:
