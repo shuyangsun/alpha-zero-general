@@ -35,7 +35,7 @@ _init_board_buff = create_string_buffer(BOARD_SIZE)
 _init_board = cast(_init_board_buff, POINTER(c_int8))
 _libc.ResetBoard_C(_init_board)
 _np_init_board = np.ctypeslib.as_array(_init_board, shape=(BOARD_SIZE,)).copy()
-
+del _init_board
 
 def movement_str(movement: c_uint16) -> str:
     from_pos = (movement & 0xFF00) >> 8
@@ -67,7 +67,9 @@ def move(board: np.ndarray, action: c_uint16) -> np.ndarray:
     board_c = cast(board_buff, POINTER(c_int8))
     _libc.CopyBoard_C(board_c, board.ctypes.data_as(POINTER(c_int8)))
     _libc.Move_C(board_c, action)
-    return np.ctypeslib.as_array(board_c, shape=(BOARD_SIZE,)).copy()
+    res = np.ctypeslib.as_array(board_c, shape=(BOARD_SIZE,)).copy()
+    del board_buff
+    return res
 
 
 def valid_moves(board: np.ndarray, player: int) -> Tuple[c_uint8, np.ndarray]:
@@ -80,7 +82,9 @@ def valid_moves(board: np.ndarray, player: int) -> Tuple[c_uint8, np.ndarray]:
     if player < 0:
         player_c = False
     num_moves = _libc.PossibleMoves_C(board_c, player_c, False, buff)
-    return (num_moves, np.ctypeslib.as_array(buff, shape=(MAX_POSSIBLE_MOVES,)).copy())
+    res = (num_moves, np.ctypeslib.as_array(buff, shape=(MAX_POSSIBLE_MOVES,)).copy())
+    del str_buff
+    return res
 
 
 def get_winner(board: np.ndarray) -> c_int8:
@@ -105,7 +109,9 @@ def mirror_horizontal(board: np.ndarray) -> np.ndarray:
     res_buff = create_string_buffer(b"\000", BOARD_SIZE)
     res = cast(res_buff, POINTER(c_int8))
     _libc.MirrorBoardHorizontal_C(res, board)
-    return np.ctypeslib.as_array(res, shape=(BOARD_SIZE,)).copy()
+    res = np.ctypeslib.as_array(res, shape=(BOARD_SIZE,)).copy()
+    del res_buff
+    return res
 
 
 def mirror_vertical(board: np.ndarray) -> np.ndarray:
@@ -114,7 +120,9 @@ def mirror_vertical(board: np.ndarray) -> np.ndarray:
     res_buff = create_string_buffer(b"\000", BOARD_SIZE)
     res = cast(res_buff, POINTER(c_int8))
     _libc.MirrorBoardVertical_C(res, board)
-    return np.ctypeslib.as_array(res, shape=(BOARD_SIZE,)).copy()
+    res = np.ctypeslib.as_array(res, shape=(BOARD_SIZE,)).copy()
+    del res_buff
+    return res
 
 
 def encode_board_state(board: np.ndarray) -> str:
@@ -124,4 +132,6 @@ def encode_board_state(board: np.ndarray) -> str:
     res = cast(res_buff, POINTER(c_uint64))
     board_c = board.ctypes.data_as(POINTER(c_int8))
     _libc.EncodeBoardState_C(board_c, res)
-    return base64.b64encode(bytes(res_buff)).decode("utf-8")
+    res = base64.b64encode(bytes(res_buff)).decode("utf-8")
+    del res_buff
+    return res
